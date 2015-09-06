@@ -7,25 +7,25 @@
 /**
  * Implements hook_services_authentication_info().
  */
-function services_api_key_auth_services_authentication_info() {
+function services_api_key_auth_header_services_authentication_info() {
   return array(
     'title' => 'API Key Authentications',
     'description' => 'Enable API Key authentication for an endpoint.',
-    'authenticate_call' => 'services_api_key_auth_services_authenticate',
-    'security_settings' => 'services_api_key_auth_services_settings_form',
+    'authenticate_call' => 'services_api_key_auth_header_services_authenticate',
+    'security_settings' => 'services_api_key_auth_header_services_settings_form',
   );
 }
 
 /**
  * Apply authentication rules.
  */
-function services_api_key_auth_services_authenticate() {
+function services_api_key_auth_header_services_authenticate() {
   // Get function arguments.
   $args = func_get_args();
   // Get the key from the request.
   $api_key = (!empty($_REQUEST['api-key'])) ? $_REQUEST['api-key'] : '';
   // Validate request
-  $valid = (services_api_key_auth_compare_key($api_key, $args[0]['api_key'])) ? TRUE : FALSE;
+  $valid = (services_api_key_auth_header_compare_key($api_key, $args[0]['api_key'])) ? TRUE : FALSE;
   if ($valid) {
     // If a valid request, witch to user to perform drupal response.
     if (!empty($args[0]['user'])) {
@@ -44,7 +44,7 @@ function services_api_key_auth_services_authenticate() {
 /**
  * Build form for authentication settings.
  */
-function services_api_key_auth_services_settings_form($settings) {
+function services_api_key_auth_header_services_settings_form($settings) {
   $form = array();
   // Text field for api key.
   $form['api_key'] = array(
@@ -84,7 +84,7 @@ function services_api_key_auth_services_settings_form($settings) {
  *
  * @return boolean
  */
-function services_api_key_auth_compare_key($a, $b) {
+function services_api_key_auth_header_compare_key($a, $b) {
   if ( strlen( $a ) !== strlen( $b ) ) {
     return FALSE;
   }
@@ -98,13 +98,13 @@ function services_api_key_auth_compare_key($a, $b) {
 /**
  * Implements hook_menu().
  */
-function services_api_key_auth_menu() {
+function services_api_key_auth_header_menu() {
   return array(
     'admin/structure/services/api_key_settings' => array(
       'title' => t('API Key settings'),
       'description' => t('Set user role for user list in API Key authentication settings.'),
       'page callback' => 'drupal_get_form',
-      'page arguments' => array('services_api_key_auth_admin_settings'),
+      'page arguments' => array('services_api_key_auth_header_admin_settings'),
       'access arguments' => array('administer services'),
       'type' => MENU_LOCAL_TASK,
     ),
@@ -114,9 +114,9 @@ function services_api_key_auth_menu() {
 /**
  * Define form for admin screen.
  *
- * @see services_api_key_auth_admin_settings_submit()
+ * @see services_api_key_auth_header_admin_settings_submit()
  */
-function services_api_key_auth_admin_settings() {
+function services_api_key_auth_header_admin_settings() {
   // Get available roles.
   $roles = user_roles();
   // Build field options.
@@ -147,9 +147,9 @@ function services_api_key_auth_admin_settings() {
 /**
  * Process admin form submission.
  *
- * @see services_api_key_auth_admin_settings()
+ * @see services_api_key_auth_header_admin_settings()
  */
-function services_api_key_auth_admin_settings_submit($form, &$state) {
+function services_api_key_auth_header_admin_settings_submit($form, &$state) {
   variable_set('service_api_key_role', $state['values']['role']);
   drupal_set_message('Settings saved.');
 }
