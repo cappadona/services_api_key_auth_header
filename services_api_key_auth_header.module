@@ -22,8 +22,9 @@ function services_api_key_auth_header_services_authentication_info() {
 function services_api_key_auth_header_services_authenticate() {
   // Get function arguments.
   $args = func_get_args();
-  // Get the key from the request.
-  $api_key = (!empty($_REQUEST['api-key'])) ? $_REQUEST['api-key'] : '';
+  // Get the key from the request http headers.
+  $http_headers = getallheaders();
+  $api_key = (!empty($http_headers['Api-Key'])) ? $http_headers['Api-Key'] : '';
   // Validate request
   $valid = (services_api_key_auth_header_compare_key($api_key, $args[0]['api_key'])) ? TRUE : FALSE;
   if ($valid) {
