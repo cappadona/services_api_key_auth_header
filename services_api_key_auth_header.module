@@ -22,13 +22,18 @@ function services_api_key_auth_header_services_authentication_info() {
 function services_api_key_auth_header_services_authenticate() {
   // Get function arguments.
   $args = func_get_args();
+  // Explode domains string into array.
+  $domains = preg_split("/\r\n|\n|\r/", $args[0]['domains']);
   // Get the key from the request http headers.
   $http_headers = getallheaders();
   $api_key = (!empty($http_headers['Api-Key'])) ? $http_headers['Api-Key'] : '';
+  // Clean up http referer for comparison.
+  $referer = str_replace('http://', '', $_SERVER['HTTP_REFERER']); // remove protocol
+  $referer = strstr($referer, '/', true); // trim everything after first forward slash
   // Validate request
-  $valid = (services_api_key_auth_header_compare_key($api_key, $args[0]['api_key'])) ? TRUE : FALSE;
+  $valid = (services_api_key_auth_header_compare_key($api_key, $args[0]['api_key']) && services_api_key_auth_header_allowed_domain($referer, $domains)) ? TRUE : FALSE;
   if ($valid) {
-    // If a valid request, witch to user to perform drupal response.
+    // If a valid request, switch to user to perform drupal response.
     if (!empty($args[0]['user'])) {
       global $user;
       $current_user = user_load($args[0]['user']);
@@ -53,6 +58,12 @@ function services_api_key_auth_header_services_settings_form($settings) {
     '#title' => t('API Key'),
     '#description' => t('Enter an API key to allow access to this endpoint.'),
     '#default_value' => (!empty($settings['api_key'])) ? $settings['api_key'] : '',
+  );
+  $form['domains'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Domains'),
+    '#description' => t('Enter domains that can access this endpoint using this API key. One per line.'),
+    '#default_value' => (!empty($settings['domains'])) ? $settings['domains'] : '',
   );
   // Get list of users with given role.
   $role = user_role_load_by_name(variable_get('service_api_key_role', 'administrator'));
@@ -94,6 +105,24 @@ function services_api_key_auth_header_compare_key($a, $b) {
     $result |= ord( $a[$i] ) ^ ord( $b[$i] );
   }
   return $result == 0;
+}
+
+/**
+ * Check HTTP_REFERER for allowed domains.
+ *
+ * @param $referer string
+ *   Stripped down $_SERVER['HTTP_REFERER'].
+ * @param $domains array
+ *   Array of allowed domains supplied via module admin.
+ *
+ * @return boolean
+ */
+function services_api_key_auth_header_allowed_domain($referer, $domains) {
+  if ( !empty($referer) && in_array($referer, $domains)) {
+    return TRUE;
+  } else {
+    return FALSE;
+  }
 }
 
 /**
